@@ -8,6 +8,7 @@ import InteractiveMap from '../components/InteractiveMap';
 import AirQualityDisplay from '../components/AirQualityDisplay';
 import AirQualityChart from '../components/AirQualityChart';
 import PollutantDetails from '../components/PollutantDetails';
+import DataSourceDocumentation from '../components/DataSourceDocumentation';
 import { toast } from "sonner";
 
 export interface Location {
@@ -44,11 +45,12 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      // For demonstration, we'll use mock data
-      // In a real application, you would integrate with Google Air Quality API
+      // Enhanced mock data with more realistic values based on location
+      const locationBasedAQI = getLocationBasedAQI(location.name);
+      
       const mockData: AirQualityData = {
-        aqi: Math.floor(Math.random() * 200) + 1,
-        aqiLevel: getAQILevel(Math.floor(Math.random() * 200) + 1),
+        aqi: locationBasedAQI,
+        aqiLevel: getAQILevel(locationBasedAQI),
         pollutants: {
           pm25: Math.floor(Math.random() * 50) + 5,
           pm10: Math.floor(Math.random() * 100) + 10,
@@ -57,7 +59,7 @@ const Index = () => {
           so2: Math.floor(Math.random() * 50) + 5,
           co: Math.floor(Math.random() * 10) + 1,
         },
-        forecast: generateMockForecast(),
+        forecast: generateLocationBasedForecast(locationBasedAQI),
       };
       
       setAirQualityData(mockData);
@@ -70,6 +72,19 @@ const Index = () => {
     }
   };
 
+  const getLocationBasedAQI = (locationName: string): number => {
+    // Simulate different AQI levels for different cities
+    const lowerCaseName = locationName.toLowerCase();
+    if (lowerCaseName.includes('beijing') || lowerCaseName.includes('delhi')) {
+      return Math.floor(Math.random() * 100) + 150; // Unhealthy range
+    } else if (lowerCaseName.includes('london') || lowerCaseName.includes('new york')) {
+      return Math.floor(Math.random() * 50) + 50; // Moderate range
+    } else if (lowerCaseName.includes('sydney') || lowerCaseName.includes('singapore')) {
+      return Math.floor(Math.random() * 50) + 10; // Good range
+    }
+    return Math.floor(Math.random() * 150) + 20; // Random for others
+  };
+
   const getAQILevel = (aqi: number): string => {
     if (aqi <= 50) return 'Good';
     if (aqi <= 100) return 'Moderate';
@@ -79,14 +94,19 @@ const Index = () => {
     return 'Hazardous';
   };
 
-  const generateMockForecast = () => {
+  const generateLocationBasedForecast = (baseAQI: number) => {
     const forecast = [];
     for (let i = 0; i < 24; i++) {
       const hour = new Date();
       hour.setHours(hour.getHours() + i);
+      
+      // Create more realistic forecast variations around the base AQI
+      const variation = (Math.random() - 0.5) * 40; // ±20 variation
+      const forecastAQI = Math.max(10, Math.min(300, baseAQI + variation));
+      
       forecast.push({
         time: hour.toISOString(),
-        aqi: Math.floor(Math.random() * 150) + 20,
+        aqi: Math.floor(forecastAQI),
         pm25: Math.floor(Math.random() * 40) + 5,
       });
     }
@@ -151,7 +171,7 @@ const Index = () => {
 
         {/* Additional Information */}
         {airQualityData && (
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
             <Card>
               <CardHeader>
                 <CardTitle>Pollutant Details</CardTitle>
@@ -171,6 +191,9 @@ const Index = () => {
             </Card>
           </div>
         )}
+
+        {/* Data Source Documentation */}
+        <DataSourceDocumentation />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 
 interface ForecastData {
   time: string;
@@ -14,54 +14,73 @@ interface AirQualityChartProps {
 }
 
 const AirQualityChart: React.FC<AirQualityChartProps> = ({ forecast }) => {
-  const chartData = forecast.map(item => ({
-    time: new Date(item.time).getHours() + ':00',
-    aqi: item.aqi,
-    pm25: item.pm25,
-  }));
+  const chartData = forecast.map(item => {
+    const date = new Date(item.time);
+    return {
+      time: date.getHours().toString().padStart(2, '0') + ':00',
+      AQI: item.aqi,
+      'PM2.5': item.pm25,
+    };
+  });
 
   const chartConfig = {
-    aqi: {
-      label: "AQI",
+    AQI: {
+      label: "Air Quality Index",
       color: "#3b82f6",
     },
-    pm25: {
-      label: "PM2.5",
+    'PM2.5': {
+      label: "PM2.5 (μg/m³)",
       color: "#ef4444",
     },
   };
 
   return (
-    <div className="w-full h-64">
+    <div className="w-full h-80">
       <ChartContainer config={chartConfig}>
-        <LineChart data={chartData}>
+        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
           <XAxis 
             dataKey="time" 
-            tickLine={false}
-            axisLine={false}
+            tickLine={true}
+            axisLine={true}
             className="text-xs"
+            interval={2}
           />
           <YAxis 
-            tickLine={false}
-            axisLine={false}
+            tickLine={true}
+            axisLine={true}
             className="text-xs"
+            domain={['dataMin - 10', 'dataMax + 10']}
           />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip 
+            content={<ChartTooltipContent 
+              formatter={(value, name) => [
+                `${value}${name === 'PM2.5' ? ' μg/m³' : ''}`, 
+                name
+              ]}
+              labelFormatter={(label) => `Time: ${label}`}
+            />} 
+          />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36}
+            iconType="line"
+          />
           <Line
             type="monotone"
-            dataKey="aqi"
-            stroke="var(--color-aqi)"
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            activeDot={{ r: 5 }}
+            dataKey="AQI"
+            stroke="var(--color-AQI)"
+            strokeWidth={3}
+            dot={{ r: 4, fill: "var(--color-AQI)" }}
+            activeDot={{ r: 6, fill: "var(--color-AQI)" }}
           />
           <Line
             type="monotone"
-            dataKey="pm25"
-            stroke="var(--color-pm25)"
-            strokeWidth={2}
-            dot={{ r: 3 }}
-            activeDot={{ r: 5 }}
+            dataKey="PM2.5"
+            stroke="var(--color-PM2.5)"
+            strokeWidth={3}
+            dot={{ r: 4, fill: "var(--color-PM2.5)" }}
+            activeDot={{ r: 6, fill: "var(--color-PM2.5)" }}
           />
         </LineChart>
       </ChartContainer>
