@@ -1,7 +1,5 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { MapPin, Search } from "lucide-react";
 import LocationSearch from '../components/LocationSearch';
 import InteractiveMap from '../components/InteractiveMap';
@@ -44,31 +42,78 @@ const Index = () => {
     setIsLoading(true);
     
     try {
-      // Enhanced mock data with more realistic values based on location
-      const locationBasedAQI = getLocationBasedAQI(location.name);
+      // Fetch real data from OpenAQ API
+      const response = await fetch(
+        `https://api.openaq.org/v2/latest?limit=1&page=1&offset=0&sort=desc&coordinates=${location.lat},${location.lng}&radius=25000&order_by=lastUpdated&dumpRaw=false`
+      );
       
-      const mockData: AirQualityData = {
-        aqi: locationBasedAQI,
-        aqiLevel: getAQILevel(locationBasedAQI),
-        pollutants: {
-          pm25: Math.floor(Math.random() * 50) + 5,
-          pm10: Math.floor(Math.random() * 100) + 10,
-          o3: Math.floor(Math.random() * 150) + 20,
-          no2: Math.floor(Math.random() * 100) + 10,
-          so2: Math.floor(Math.random() * 50) + 5,
-          co: Math.floor(Math.random() * 10) + 1,
-        },
-        forecast: generateLocationBasedForecast(locationBasedAQI),
-      };
+      if (!response.ok) {
+        throw new Error('Failed to fetch air quality data');
+      }
       
-      setAirQualityData(mockData);
-      toast.success(`Air quality data loaded for ${location.name}`);
+      const data = await response.json();
+      
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const measurements = result.measurements || [];
+        
+        // Parse real data
+        const pollutants = {
+          pm25: measurements.find((m: any) => m.parameter === 'pm25')?.value || 0,
+          pm10: measurements.find((m: any) => m.parameter === 'pm10')?.value || 0,
+          o3: measurements.find((m: any) => m.parameter === 'o3')?.value || 0,
+          no2: measurements.find((m: any) => m.parameter === 'no2')?.value || 0,
+          so2: measurements.find((m: any) => m.parameter === 'so2')?.value || 0,
+          co: measurements.find((m: any) => m.parameter === 'co')?.value || 0,
+        };
+        
+        // Calculate AQI from PM2.5 (simplified calculation)
+        const aqi = calculateAQIFromPM25(pollutants.pm25);
+        
+        const realData: AirQualityData = {
+          aqi,
+          aqiLevel: getAQILevel(aqi),
+          pollutants,
+          forecast: generateLocationBasedForecast(aqi),
+        };
+        
+        setAirQualityData(realData);
+        toast.success(`Real air quality data loaded for ${location.name}`);
+      } else {
+        // Fallback to mock data if no real data available
+        const locationBasedAQI = getLocationBasedAQI(location.name);
+        const mockData: AirQualityData = {
+          aqi: locationBasedAQI,
+          aqiLevel: getAQILevel(locationBasedAQI),
+          pollutants: {
+            pm25: Math.floor(Math.random() * 50) + 5,
+            pm10: Math.floor(Math.random() * 100) + 10,
+            o3: Math.floor(Math.random() * 150) + 20,
+            no2: Math.floor(Math.random() * 100) + 10,
+            so2: Math.floor(Math.random() * 50) + 5,
+            co: Math.floor(Math.random() * 10) + 1,
+          },
+          forecast: generateLocationBasedForecast(locationBasedAQI),
+        };
+        setAirQualityData(mockData);
+        toast.warning(`No real-time data available. Showing mock data for ${location.name}`);
+      }
     } catch (error) {
       toast.error('Failed to fetch air quality data');
       console.error('Error fetching air quality data:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const calculateAQIFromPM25 = (pm25: number): number => {
+    // Simplified AQI calculation based on PM2.5
+    if (pm25 <= 12) return Math.round((50 / 12) * pm25);
+    if (pm25 <= 35.4) return Math.round(((100 - 51) / (35.4 - 12.1)) * (pm25 - 12.1) + 51);
+    if (pm25 <= 55.4) return Math.round(((150 - 101) / (55.4 - 35.5)) * (pm25 - 35.5) + 101);
+    if (pm25 <= 150.4) return Math.round(((200 - 151) / (150.4 - 55.5)) * (pm25 - 55.5) + 151);
+    if (pm25 <= 250.4) return Math.round(((300 - 201) / (250.4 - 150.5)) * (pm25 - 150.5) + 201);
+    return Math.round(((500 - 301) / (500.4 - 250.5)) * (pm25 - 250.5) + 301);
   };
 
   const getLocationBasedAQI = (locationName: string): number => {
@@ -113,29 +158,30 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <header className="text-center mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
             AirWise Global Monitor
           </h1>
-          <p className="text-lg text-gray-600">
-            Real-time air quality monitoring with AI-powered insights
+          <p className="text-sm sm:text-lg text-gray-600">
+            Real-time air quality monitoring with open-source data
           </p>
         </header>
 
-        <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {/* Location Selection */}
+        {/* Mobile-first layout */}
+        <div className="space-y-4 sm:space-y-6">
+          {/* Location Selection - Full width on mobile */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <Search className="h-5 w-5" />
                 Location Selection
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <LocationSearch onLocationSelect={handleLocationSelect} />
-              <div className="h-64">
+              <div className="h-48 sm:h-64">
                 <InteractiveMap 
                   onLocationSelect={handleLocationSelect}
                   selectedLocation={selectedLocation}
@@ -144,10 +190,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* Current Air Quality */}
+          {/* Current Air Quality - Full width on mobile */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <MapPin className="h-5 w-5" />
                 Current Air Quality
               </CardTitle>
@@ -166,30 +212,30 @@ const Index = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Additional Information - Stack vertically on mobile */}
+          {airQualityData && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Pollutant Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PollutantDetails pollutants={airQualityData.pollutants} />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">24-Hour Forecast</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AirQualityChart forecast={airQualityData.forecast} />
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
-
-        {/* Additional Information */}
-        {airQualityData && (
-          <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pollutant Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PollutantDetails pollutants={airQualityData.pollutants} />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>24-Hour Forecast</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <AirQualityChart forecast={airQualityData.forecast} />
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );
