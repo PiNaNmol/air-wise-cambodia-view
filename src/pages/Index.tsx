@@ -8,7 +8,6 @@ import InteractiveMap from '../components/InteractiveMap';
 import AirQualityDisplay from '../components/AirQualityDisplay';
 import AirQualityChart from '../components/AirQualityChart';
 import PollutantDetails from '../components/PollutantDetails';
-import DataSourceDocumentation from '../components/DataSourceDocumentation';
 import { toast } from "sonner";
 
 export interface Location {
@@ -191,9 +190,6 @@ const Index = () => {
             </Card>
           </div>
         )}
-
-        {/* Data Source Documentation */}
-        <DataSourceDocumentation />
       </div>
     </div>
   );
