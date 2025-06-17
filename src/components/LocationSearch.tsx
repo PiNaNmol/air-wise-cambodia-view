@@ -23,7 +23,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Enhanced city database with more global coverage
+  // Enhanced city database with precise coordinates
   const cityDatabase: LocationSuggestion[] = [
     { name: 'New York', lat: 40.7128, lng: -74.0060, country: 'USA' },
     { name: 'London', lat: 51.5074, lng: -0.1278, country: 'UK' },
@@ -53,6 +53,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
     { name: 'Dubai', lat: 25.2048, lng: 55.2708, country: 'UAE' },
     { name: 'Istanbul', lat: 41.0082, lng: 28.9784, country: 'Turkey' },
     { name: 'Washington DC', lat: 38.9072, lng: -77.0369, country: 'USA' },
+    { name: 'Delhi', lat: 28.6139, lng: 77.2090, country: 'India' },
+    { name: 'Shanghai', lat: 31.2304, lng: 121.4737, country: 'China' },
   ];
 
   useEffect(() => {
@@ -60,7 +62,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
       const filtered = cityDatabase.filter(city =>
         city.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         city.country.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 5);
+      ).slice(0, 8); // Show more suggestions
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
@@ -82,27 +84,28 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
       let targetCity = selectedCity;
       
       if (!targetCity) {
-        // Try to find exact match first
+        // Try exact match first
         targetCity = cityDatabase.find(city => 
           city.name.toLowerCase() === searchQuery.toLowerCase().trim()
         );
         
-        // If no exact match, try partial matching
+        // Try partial matching
         if (!targetCity) {
           targetCity = cityDatabase.find(city => 
-            city.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
-            searchQuery.toLowerCase().trim().includes(city.name.toLowerCase())
+            city.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
           );
         }
       }
 
       if (!targetCity) {
-        // Default to New York with a warning
+        // Fallback to New York
         targetCity = cityDatabase.find(city => city.name === 'New York')!;
-        toast.warning(`Location "${searchQuery}" not found. Showing New York instead. Try cities like: London, Tokyo, Paris, etc.`);
+        toast.warning(`Location "${searchQuery}" not found. Available cities: ${cityDatabase.slice(0, 5).map(c => c.name).join(', ')}, etc.`);
       } else {
-        toast.success(`Found location: ${targetCity.name}, ${targetCity.country}`);
+        toast.success(`Located: ${targetCity.name}, ${targetCity.country}`);
       }
+
+      console.log('Searching for city:', targetCity);
 
       const location: Location = {
         lat: targetCity.lat,
@@ -113,21 +116,34 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
       onLocationSelect(location);
       setSearchQuery('');
     } catch (error) {
-      toast.error('Failed to search for location');
-      console.error('Geocoding error:', error);
+      toast.error('Search failed. Please try again.');
+      console.error('Search error:', error);
     } finally {
       setIsSearching(false);
     }
   };
 
   const handleSuggestionClick = (suggestion: LocationSuggestion) => {
-    setSearchQuery(suggestion.name);
+    console.log('Suggestion clicked:', suggestion);
+    setSearchQuery('');
+    setShowSuggestions(false);
     handleSearch(suggestion);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay hiding suggestions to allow click events
+    setTimeout(() => setShowSuggestions(false), 200);
+  };
+
+  const handleInputFocus = () => {
+    if (searchQuery.length > 0 && suggestions.length > 0) {
+      setShowSuggestions(true);
     }
   };
 
@@ -141,19 +157,22 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleKeyPress}
+            onBlur={handleInputBlur}
+            onFocus={handleInputFocus}
             className="pr-4"
           />
           
           {/* Suggestions dropdown */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-48 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-64 overflow-y-auto">
               {suggestions.map((suggestion, index) => (
                 <div
-                  key={index}
-                  className="flex items-center gap-2 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                  key={`${suggestion.name}-${suggestion.country}-${index}`}
+                  className="flex items-center gap-2 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 transition-colors"
                   onClick={() => handleSuggestionClick(suggestion)}
+                  onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
                 >
-                  <MapPin className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <MapPin className="h-4 w-4 text-blue-500 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm truncate">{suggestion.name}</div>
                     <div className="text-xs text-gray-500">{suggestion.country}</div>

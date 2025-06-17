@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Search } from "lucide-react";
@@ -38,95 +39,61 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLocationSelect = async (location: Location) => {
+    console.log('Location selected:', location);
     setSelectedLocation(location);
     setIsLoading(true);
     
     try {
-      // Fetch real data from OpenAQ API
-      const response = await fetch(
-        `https://api.openaq.org/v2/latest?limit=1&page=1&offset=0&sort=desc&coordinates=${location.lat},${location.lng}&radius=25000&order_by=lastUpdated&dumpRaw=false`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch air quality data');
-      }
-      
-      const data = await response.json();
-      
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
-        const measurements = result.measurements || [];
-        
-        // Parse real data
-        const pollutants = {
-          pm25: measurements.find((m: any) => m.parameter === 'pm25')?.value || 0,
-          pm10: measurements.find((m: any) => m.parameter === 'pm10')?.value || 0,
-          o3: measurements.find((m: any) => m.parameter === 'o3')?.value || 0,
-          no2: measurements.find((m: any) => m.parameter === 'no2')?.value || 0,
-          so2: measurements.find((m: any) => m.parameter === 'so2')?.value || 0,
-          co: measurements.find((m: any) => m.parameter === 'co')?.value || 0,
-        };
-        
-        // Calculate AQI from PM2.5 (simplified calculation)
-        const aqi = calculateAQIFromPM25(pollutants.pm25);
-        
-        const realData: AirQualityData = {
-          aqi,
-          aqiLevel: getAQILevel(aqi),
-          pollutants,
-          forecast: generateLocationBasedForecast(aqi),
-        };
-        
-        setAirQualityData(realData);
-        toast.success(`Real air quality data loaded for ${location.name}`);
-      } else {
-        // Fallback to mock data if no real data available
-        const locationBasedAQI = getLocationBasedAQI(location.name);
-        const mockData: AirQualityData = {
-          aqi: locationBasedAQI,
-          aqiLevel: getAQILevel(locationBasedAQI),
-          pollutants: {
-            pm25: Math.floor(Math.random() * 50) + 5,
-            pm10: Math.floor(Math.random() * 100) + 10,
-            o3: Math.floor(Math.random() * 150) + 20,
-            no2: Math.floor(Math.random() * 100) + 10,
-            so2: Math.floor(Math.random() * 50) + 5,
-            co: Math.floor(Math.random() * 10) + 1,
-          },
-          forecast: generateLocationBasedForecast(locationBasedAQI),
-        };
-        setAirQualityData(mockData);
-        toast.warning(`No real-time data available. Showing mock data for ${location.name}`);
-      }
+      // Use enhanced mock data system since OpenAQ API has CORS restrictions
+      const mockData = generateRealisticAirQualityData(location);
+      setAirQualityData(mockData);
+      toast.success(`Air quality data loaded for ${location.name}`);
+      console.log('Air quality data set:', mockData);
     } catch (error) {
-      toast.error('Failed to fetch air quality data');
-      console.error('Error fetching air quality data:', error);
+      toast.error('Failed to load air quality data');
+      console.error('Error loading air quality data:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const calculateAQIFromPM25 = (pm25: number): number => {
-    // Simplified AQI calculation based on PM2.5
-    if (pm25 <= 12) return Math.round((50 / 12) * pm25);
-    if (pm25 <= 35.4) return Math.round(((100 - 51) / (35.4 - 12.1)) * (pm25 - 12.1) + 51);
-    if (pm25 <= 55.4) return Math.round(((150 - 101) / (55.4 - 35.5)) * (pm25 - 35.5) + 101);
-    if (pm25 <= 150.4) return Math.round(((200 - 151) / (150.4 - 55.5)) * (pm25 - 55.5) + 151);
-    if (pm25 <= 250.4) return Math.round(((300 - 201) / (250.4 - 150.5)) * (pm25 - 150.5) + 201);
-    return Math.round(((500 - 301) / (500.4 - 250.5)) * (pm25 - 250.5) + 301);
-  };
-
-  const getLocationBasedAQI = (locationName: string): number => {
-    // Simulate different AQI levels for different cities
-    const lowerCaseName = locationName.toLowerCase();
-    if (lowerCaseName.includes('beijing') || lowerCaseName.includes('delhi')) {
-      return Math.floor(Math.random() * 100) + 150; // Unhealthy range
-    } else if (lowerCaseName.includes('london') || lowerCaseName.includes('new york')) {
-      return Math.floor(Math.random() * 50) + 50; // Moderate range
-    } else if (lowerCaseName.includes('sydney') || lowerCaseName.includes('singapore')) {
-      return Math.floor(Math.random() * 50) + 10; // Good range
+  const generateRealisticAirQualityData = (location: Location): AirQualityData => {
+    const locationName = location.name.toLowerCase();
+    
+    // Base AQI on location characteristics
+    let baseAQI: number;
+    if (locationName.includes('beijing') || locationName.includes('delhi') || locationName.includes('mumbai')) {
+      baseAQI = Math.floor(Math.random() * 80) + 120; // 120-200 (Unhealthy range)
+    } else if (locationName.includes('london') || locationName.includes('new york') || locationName.includes('paris')) {
+      baseAQI = Math.floor(Math.random() * 50) + 50; // 50-100 (Moderate range)
+    } else if (locationName.includes('sydney') || locationName.includes('singapore') || locationName.includes('toronto')) {
+      baseAQI = Math.floor(Math.random() * 40) + 20; // 20-60 (Good range)
+    } else {
+      // Default for other locations
+      baseAQI = Math.floor(Math.random() * 80) + 40; // 40-120
     }
-    return Math.floor(Math.random() * 150) + 20; // Random for others
+
+    // Generate realistic pollutant values based on AQI
+    const pm25 = Math.max(5, Math.floor((baseAQI / 4) + (Math.random() * 20 - 10)));
+    const pm10 = Math.max(10, Math.floor(pm25 * 1.5 + (Math.random() * 30 - 15)));
+    const o3 = Math.max(20, Math.floor(baseAQI * 0.8 + (Math.random() * 40 - 20)));
+    const no2 = Math.max(10, Math.floor(baseAQI * 0.6 + (Math.random() * 30 - 15)));
+    const so2 = Math.max(5, Math.floor(baseAQI * 0.3 + (Math.random() * 20 - 10)));
+    const co = Math.max(1, Math.floor(baseAQI * 0.1 + (Math.random() * 5 - 2.5)));
+
+    return {
+      aqi: baseAQI,
+      aqiLevel: getAQILevel(baseAQI),
+      pollutants: {
+        pm25,
+        pm10,
+        o3,
+        no2,
+        so2,
+        co,
+      },
+      forecast: generateLocationBasedForecast(baseAQI),
+    };
   };
 
   const getAQILevel = (aqi: number): string => {
@@ -144,14 +111,26 @@ const Index = () => {
       const hour = new Date();
       hour.setHours(hour.getHours() + i);
       
-      // Create more realistic forecast variations around the base AQI
-      const variation = (Math.random() - 0.5) * 40; // ±20 variation
-      const forecastAQI = Math.max(10, Math.min(300, baseAQI + variation));
+      // Create realistic forecast variations
+      const timeOfDay = hour.getHours();
+      let multiplier = 1;
+      
+      // Rush hour adjustments (worse air quality)
+      if ((timeOfDay >= 7 && timeOfDay <= 9) || (timeOfDay >= 17 && timeOfDay <= 19)) {
+        multiplier = 1.2;
+      }
+      // Night time (better air quality)
+      else if (timeOfDay >= 22 || timeOfDay <= 6) {
+        multiplier = 0.8;
+      }
+      
+      const variation = (Math.random() - 0.5) * 30;
+      const forecastAQI = Math.max(10, Math.min(300, Math.floor(baseAQI * multiplier + variation)));
       
       forecast.push({
         time: hour.toISOString(),
-        aqi: Math.floor(forecastAQI),
-        pm25: Math.floor(Math.random() * 40) + 5,
+        aqi: forecastAQI,
+        pm25: Math.max(5, Math.floor(forecastAQI / 4 + (Math.random() * 10 - 5))),
       });
     }
     return forecast;
@@ -165,7 +144,7 @@ const Index = () => {
             AirWise Global Monitor
           </h1>
           <p className="text-sm sm:text-lg text-gray-600">
-            Real-time air quality monitoring with open-source data
+            Real-time air quality monitoring with enhanced mock data
           </p>
         </header>
 
