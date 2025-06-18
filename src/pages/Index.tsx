@@ -45,7 +45,7 @@ const Index = () => {
       // Enhanced mock data system for Cambodia locations
       const mockData = generateCambodiaAirQualityData(location);
       setAirQualityData(mockData);
-      toast.success(`Air quality data loaded for ${location.name}`);
+      toast(`Air quality data loaded for ${location.name}`);
       console.log('Cambodia air quality data set:', mockData);
     } catch (error) {
       toast.error('Failed to load air quality data');
