@@ -10,59 +10,68 @@ interface LocationSearchProps {
   onLocationSelect: (location: Location) => void;
 }
 
-interface LocationSuggestion {
+interface CambodiaLocationSuggestion {
   name: string;
   lat: number;
   lng: number;
-  country: string;
+  province: string;
+  type: string; // city, district, commune
 }
 
 const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<CambodiaLocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Enhanced city database with precise coordinates
-  const cityDatabase: LocationSuggestion[] = [
-    { name: 'New York', lat: 40.7128, lng: -74.0060, country: 'USA' },
-    { name: 'London', lat: 51.5074, lng: -0.1278, country: 'UK' },
-    { name: 'Tokyo', lat: 35.6762, lng: 139.6503, country: 'Japan' },
-    { name: 'Paris', lat: 48.8566, lng: 2.3522, country: 'France' },
-    { name: 'Sydney', lat: -33.8688, lng: 151.2093, country: 'Australia' },
-    { name: 'Berlin', lat: 52.5200, lng: 13.4050, country: 'Germany' },
-    { name: 'Moscow', lat: 55.7558, lng: 37.6176, country: 'Russia' },
-    { name: 'Beijing', lat: 39.9042, lng: 116.4074, country: 'China' },
-    { name: 'Mumbai', lat: 19.0760, lng: 72.8777, country: 'India' },
-    { name: 'Cairo', lat: 30.0444, lng: 31.2357, country: 'Egypt' },
-    { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, country: 'USA' },
-    { name: 'Bangkok', lat: 13.7563, lng: 100.5018, country: 'Thailand' },
-    { name: 'Phnom Penh', lat: 11.5564, lng: 104.9282, country: 'Cambodia' },
-    { name: 'Singapore', lat: 1.3521, lng: 103.8198, country: 'Singapore' },
-    { name: 'Toronto', lat: 43.6532, lng: -79.3832, country: 'Canada' },
-    { name: 'Mexico City', lat: 19.4326, lng: -99.1332, country: 'Mexico' },
-    { name: 'Jakarta', lat: -6.2088, lng: 106.8456, country: 'Indonesia' },
-    { name: 'Rome', lat: 41.9028, lng: 12.4964, country: 'Italy' },
-    { name: 'Madrid', lat: 40.4168, lng: -3.7038, country: 'Spain' },
-    { name: 'Amsterdam', lat: 52.3676, lng: 4.9041, country: 'Netherlands' },
-    { name: 'Seoul', lat: 37.5665, lng: 126.9780, country: 'South Korea' },
-    { name: 'Lagos', lat: 6.5244, lng: 3.3792, country: 'Nigeria' },
-    { name: 'São Paulo', lat: -23.5558, lng: -46.6396, country: 'Brazil' },
-    { name: 'Buenos Aires', lat: -34.6118, lng: -58.3960, country: 'Argentina' },
-    { name: 'Cape Town', lat: -33.9249, lng: 18.4241, country: 'South Africa' },
-    { name: 'Dubai', lat: 25.2048, lng: 55.2708, country: 'UAE' },
-    { name: 'Istanbul', lat: 41.0082, lng: 28.9784, country: 'Turkey' },
-    { name: 'Washington DC', lat: 38.9072, lng: -77.0369, country: 'USA' },
-    { name: 'Delhi', lat: 28.6139, lng: 77.2090, country: 'India' },
-    { name: 'Shanghai', lat: 31.2304, lng: 121.4737, country: 'China' },
+  // Comprehensive Cambodia locations database
+  const cambodiaLocations: CambodiaLocationSuggestion[] = [
+    // Major Cities
+    { name: 'Phnom Penh', lat: 11.5564, lng: 104.9282, province: 'Phnom Penh', type: 'city' },
+    { name: 'Siem Reap', lat: 13.3671, lng: 103.8448, province: 'Siem Reap', type: 'city' },
+    { name: 'Battambang', lat: 13.0957, lng: 103.2022, province: 'Battambang', type: 'city' },
+    { name: 'Sihanoukville', lat: 10.6090, lng: 103.5294, province: 'Preah Sihanouk', type: 'city' },
+    { name: 'Kampong Cham', lat: 11.9934, lng: 105.4635, province: 'Kampong Cham', type: 'city' },
+    { name: 'Kampot', lat: 10.6104, lng: 104.1819, province: 'Kampot', type: 'city' },
+    { name: 'Kep', lat: 10.4833, lng: 104.3167, province: 'Kep', type: 'city' },
+    { name: 'Pursat', lat: 12.5388, lng: 103.9192, province: 'Pursat', type: 'city' },
+    { name: 'Takeo', lat: 10.9909, lng: 104.7851, province: 'Takeo', type: 'city' },
+    { name: 'Kampong Speu', lat: 11.4565, lng: 104.5225, province: 'Kampong Speu', type: 'city' },
+    
+    // Provincial Towns
+    { name: 'Kratie', lat: 12.4888, lng: 106.0197, province: 'Kratie', type: 'city' },
+    { name: 'Stung Treng', lat: 13.5259, lng: 105.9683, province: 'Stung Treng', type: 'city' },
+    { name: 'Preah Vihear', lat: 13.8073, lng: 104.9739, province: 'Preah Vihear', type: 'city' },
+    { name: 'Mondulkiri', lat: 12.4545, lng: 107.2032, province: 'Mondulkiri', type: 'city' },
+    { name: 'Ratanakiri', lat: 13.7351, lng: 106.9880, province: 'Ratanakiri', type: 'city' },
+    { name: 'Pailin', lat: 12.8481, lng: 102.6077, province: 'Pailin', type: 'city' },
+    { name: 'Banteay Meanchey', lat: 13.7436, lng: 102.9746, province: 'Banteay Meanchey', type: 'city' },
+    { name: 'Oddar Meanchey', lat: 14.1167, lng: 103.5167, province: 'Oddar Meanchey', type: 'city' },
+    { name: 'Koh Kong', lat: 11.6153, lng: 102.9840, province: 'Koh Kong', type: 'city' },
+    { name: 'Prey Veng', lat: 11.4869, lng: 105.3250, province: 'Prey Veng', type: 'city' },
+    { name: 'Svay Rieng', lat: 11.0879, lng: 105.7993, province: 'Svay Rieng', type: 'city' },
+    { name: 'Kampong Chhnang', lat: 12.2497, lng: 104.6644, province: 'Kampong Chhnang', type: 'city' },
+    { name: 'Kampong Thom', lat: 12.7112, lng: 104.8889, province: 'Kampong Thom', type: 'city' },
+    { name: 'Tboung Khmum', lat: 12.2006, lng: 105.4272, province: 'Tboung Khmum', type: 'city' },
+    
+    // Important Districts/Towns
+    { name: 'Poipet', lat: 13.6500, lng: 102.5667, province: 'Banteay Meanchey', type: 'district' },
+    { name: 'Bavet', lat: 11.1167, lng: 105.9000, province: 'Svay Rieng', type: 'district' },
+    { name: 'Sisophon', lat: 13.5859, lng: 102.9740, province: 'Banteay Meanchey', type: 'district' },
+    { name: 'Kompong Som', lat: 10.6270, lng: 103.5098, province: 'Preah Sihanouk', type: 'district' },
+    { name: 'Angkor', lat: 13.4125, lng: 103.8670, province: 'Siem Reap', type: 'district' },
+    { name: 'Ta Khmau', lat: 11.4833, lng: 104.9500, province: 'Kandal', type: 'district' },
+    { name: 'Chbar Mon', lat: 11.2500, lng: 105.1167, province: 'Kampong Speu', type: 'district' },
+    { name: 'Suong', lat: 11.9500, lng: 105.7500, province: 'Tboung Khmum', type: 'district' },
   ];
 
   useEffect(() => {
     if (searchQuery.length > 0) {
-      const filtered = cityDatabase.filter(city =>
-        city.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        city.country.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 8); // Show more suggestions
+      const filtered = cambodiaLocations.filter(location =>
+        location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        location.province.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        location.type.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 10);
       setSuggestions(filtered);
       setShowSuggestions(true);
     } else {
@@ -71,9 +80,9 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
     }
   }, [searchQuery]);
 
-  const handleSearch = async (selectedCity?: LocationSuggestion) => {
-    if (!searchQuery.trim() && !selectedCity) {
-      toast.error('Please enter a location to search');
+  const handleSearch = async (selectedLocation?: CambodiaLocationSuggestion) => {
+    if (!searchQuery.trim() && !selectedLocation) {
+      toast.error('Please enter a Cambodia location to search');
       return;
     }
 
@@ -81,36 +90,36 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
     setShowSuggestions(false);
     
     try {
-      let targetCity = selectedCity;
+      let targetLocation = selectedLocation;
       
-      if (!targetCity) {
+      if (!targetLocation) {
         // Try exact match first
-        targetCity = cityDatabase.find(city => 
-          city.name.toLowerCase() === searchQuery.toLowerCase().trim()
+        targetLocation = cambodiaLocations.find(location => 
+          location.name.toLowerCase() === searchQuery.toLowerCase().trim()
         );
         
         // Try partial matching
-        if (!targetCity) {
-          targetCity = cityDatabase.find(city => 
-            city.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+        if (!targetLocation) {
+          targetLocation = cambodiaLocations.find(location => 
+            location.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
           );
         }
       }
 
-      if (!targetCity) {
-        // Fallback to New York
-        targetCity = cityDatabase.find(city => city.name === 'New York')!;
-        toast.warning(`Location "${searchQuery}" not found. Available cities: ${cityDatabase.slice(0, 5).map(c => c.name).join(', ')}, etc.`);
+      if (!targetLocation) {
+        // Fallback to Phnom Penh
+        targetLocation = cambodiaLocations.find(location => location.name === 'Phnom Penh')!;
+        toast.warning(`Location "${searchQuery}" not found in Cambodia. Showing available locations: ${cambodiaLocations.slice(0, 5).map(c => c.name).join(', ')}, etc.`);
       } else {
-        toast.success(`Located: ${targetCity.name}, ${targetCity.country}`);
+        toast.success(`Located: ${targetLocation.name}, ${targetLocation.province}`);
       }
 
-      console.log('Searching for city:', targetCity);
+      console.log('Searching for Cambodia location:', targetLocation);
 
       const location: Location = {
-        lat: targetCity.lat,
-        lng: targetCity.lng,
-        name: `${targetCity.name}, ${targetCity.country}`,
+        lat: targetLocation.lat,
+        lng: targetLocation.lng,
+        name: `${targetLocation.name}, ${targetLocation.province}`,
       };
 
       onLocationSelect(location);
@@ -123,8 +132,8 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
     }
   };
 
-  const handleSuggestionClick = (suggestion: LocationSuggestion) => {
-    console.log('Suggestion clicked:', suggestion);
+  const handleSuggestionClick = (suggestion: CambodiaLocationSuggestion) => {
+    console.log('Cambodia suggestion clicked:', suggestion);
     setSearchQuery('');
     setShowSuggestions(false);
     handleSearch(suggestion);
@@ -137,7 +146,6 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
   };
 
   const handleInputBlur = () => {
-    // Delay hiding suggestions to allow click events
     setTimeout(() => setShowSuggestions(false), 200);
   };
 
@@ -153,7 +161,7 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
         <div className="flex-1 relative">
           <Input
             type="text"
-            placeholder="Search cities (e.g., London, Tokyo, New York)..."
+            placeholder="Search Cambodia locations (e.g., Phnom Penh, Siem Reap, Battambang)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -162,20 +170,24 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
             className="pr-4"
           />
           
-          {/* Suggestions dropdown */}
+          {/* Enhanced suggestions dropdown for Cambodia */}
           {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-64 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 mt-1 max-h-80 overflow-y-auto">
               {suggestions.map((suggestion, index) => (
                 <div
-                  key={`${suggestion.name}-${suggestion.country}-${index}`}
-                  className="flex items-center gap-2 p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 transition-colors"
+                  key={`${suggestion.name}-${suggestion.province}-${index}`}
+                  className="flex items-center gap-3 p-3 hover:bg-blue-50 cursor-pointer border-b last:border-b-0 transition-colors"
                   onClick={() => handleSuggestionClick(suggestion)}
-                  onMouseDown={(e) => e.preventDefault()} // Prevent blur on click
+                  onMouseDown={(e) => e.preventDefault()}
                 >
-                  <MapPin className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm truncate">{suggestion.name}</div>
-                    <div className="text-xs text-gray-500">{suggestion.country}</div>
+                    <div className="font-medium text-sm truncate text-gray-900">{suggestion.name}</div>
+                    <div className="text-xs text-gray-600">{suggestion.province} Province</div>
+                    <div className="text-xs text-blue-600 capitalize">{suggestion.type}</div>
+                  </div>
+                  <div className="text-xs text-gray-400 hidden sm:block">
+                    {suggestion.lat.toFixed(3)}, {suggestion.lng.toFixed(3)}
                   </div>
                 </div>
               ))}
@@ -191,6 +203,22 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onLocationSelect }) => 
         >
           <Search className="h-4 w-4" />
         </Button>
+      </div>
+      
+      {/* Popular Cambodia locations quick access */}
+      <div className="mt-3">
+        <div className="text-xs text-gray-600 mb-2">Popular locations:</div>
+        <div className="flex flex-wrap gap-2">
+          {cambodiaLocations.slice(0, 6).map((location) => (
+            <button
+              key={location.name}
+              onClick={() => handleSuggestionClick(location)}
+              className="px-3 py-1 text-xs bg-blue-50 text-blue-700 rounded-full hover:bg-blue-100 transition-colors border border-blue-200"
+            >
+              {location.name}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

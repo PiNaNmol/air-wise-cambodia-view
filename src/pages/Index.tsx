@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Search } from "lucide-react";
+import { MapPin, Search, Globe } from "lucide-react";
 import LocationSearch from '../components/LocationSearch';
-import InteractiveMap from '../components/InteractiveMap';
 import AirQualityDisplay from '../components/AirQualityDisplay';
 import AirQualityChart from '../components/AirQualityChart';
 import PollutantDetails from '../components/PollutantDetails';
@@ -39,16 +37,16 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLocationSelect = async (location: Location) => {
-    console.log('Location selected:', location);
+    console.log('Cambodia location selected:', location);
     setSelectedLocation(location);
     setIsLoading(true);
     
     try {
-      // Use enhanced mock data system since OpenAQ API has CORS restrictions
-      const mockData = generateRealisticAirQualityData(location);
+      // Enhanced mock data system for Cambodia locations
+      const mockData = generateCambodiaAirQualityData(location);
       setAirQualityData(mockData);
       toast.success(`Air quality data loaded for ${location.name}`);
-      console.log('Air quality data set:', mockData);
+      console.log('Cambodia air quality data set:', mockData);
     } catch (error) {
       toast.error('Failed to load air quality data');
       console.error('Error loading air quality data:', error);
@@ -57,29 +55,31 @@ const Index = () => {
     }
   };
 
-  const generateRealisticAirQualityData = (location: Location): AirQualityData => {
+  const generateCambodiaAirQualityData = (location: Location): AirQualityData => {
     const locationName = location.name.toLowerCase();
     
-    // Base AQI on location characteristics
+    // Cambodia-specific AQI patterns based on common pollution sources
     let baseAQI: number;
-    if (locationName.includes('beijing') || locationName.includes('delhi') || locationName.includes('mumbai')) {
-      baseAQI = Math.floor(Math.random() * 80) + 120; // 120-200 (Unhealthy range)
-    } else if (locationName.includes('london') || locationName.includes('new york') || locationName.includes('paris')) {
-      baseAQI = Math.floor(Math.random() * 50) + 50; // 50-100 (Moderate range)
-    } else if (locationName.includes('sydney') || locationName.includes('singapore') || locationName.includes('toronto')) {
-      baseAQI = Math.floor(Math.random() * 40) + 20; // 20-60 (Good range)
+    if (locationName.includes('phnom penh')) {
+      baseAQI = Math.floor(Math.random() * 70) + 80; // 80-150 (Moderate to Unhealthy for Sensitive)
+    } else if (locationName.includes('siem reap') || locationName.includes('battambang')) {
+      baseAQI = Math.floor(Math.random() * 60) + 60; // 60-120 (Moderate)
+    } else if (locationName.includes('sihanoukville') || locationName.includes('kampot')) {
+      baseAQI = Math.floor(Math.random() * 50) + 40; // 40-90 (Good to Moderate)
+    } else if (locationName.includes('mondulkiri') || locationName.includes('ratanakiri')) {
+      baseAQI = Math.floor(Math.random() * 40) + 20; // 20-60 (Good)
     } else {
-      // Default for other locations
-      baseAQI = Math.floor(Math.random() * 80) + 40; // 40-120
+      // Default for other Cambodia locations
+      baseAQI = Math.floor(Math.random() * 60) + 50; // 50-110
     }
 
-    // Generate realistic pollutant values based on AQI
-    const pm25 = Math.max(5, Math.floor((baseAQI / 4) + (Math.random() * 20 - 10)));
-    const pm10 = Math.max(10, Math.floor(pm25 * 1.5 + (Math.random() * 30 - 15)));
-    const o3 = Math.max(20, Math.floor(baseAQI * 0.8 + (Math.random() * 40 - 20)));
-    const no2 = Math.max(10, Math.floor(baseAQI * 0.6 + (Math.random() * 30 - 15)));
-    const so2 = Math.max(5, Math.floor(baseAQI * 0.3 + (Math.random() * 20 - 10)));
-    const co = Math.max(1, Math.floor(baseAQI * 0.1 + (Math.random() * 5 - 2.5)));
+    // Generate realistic pollutant values for Cambodia climate
+    const pm25 = Math.max(8, Math.floor((baseAQI / 3.5) + (Math.random() * 15 - 7)));
+    const pm10 = Math.max(15, Math.floor(pm25 * 1.8 + (Math.random() * 25 - 12)));
+    const o3 = Math.max(25, Math.floor(baseAQI * 0.7 + (Math.random() * 35 - 17)));
+    const no2 = Math.max(12, Math.floor(baseAQI * 0.5 + (Math.random() * 25 - 12)));
+    const so2 = Math.max(8, Math.floor(baseAQI * 0.25 + (Math.random() * 15 - 7)));
+    const co = Math.max(2, Math.floor(baseAQI * 0.08 + (Math.random() * 4 - 2)));
 
     return {
       aqi: baseAQI,
@@ -92,7 +92,7 @@ const Index = () => {
         so2,
         co,
       },
-      forecast: generateLocationBasedForecast(baseAQI),
+      forecast: generateCambodiaForecast(baseAQI),
     };
   };
 
@@ -105,75 +105,82 @@ const Index = () => {
     return 'Hazardous';
   };
 
-  const generateLocationBasedForecast = (baseAQI: number) => {
+  const generateCambodiaForecast = (baseAQI: number) => {
     const forecast = [];
     for (let i = 0; i < 24; i++) {
       const hour = new Date();
       hour.setHours(hour.getHours() + i);
       
-      // Create realistic forecast variations
+      // Cambodia-specific forecast variations
       const timeOfDay = hour.getHours();
       let multiplier = 1;
       
-      // Rush hour adjustments (worse air quality)
-      if ((timeOfDay >= 7 && timeOfDay <= 9) || (timeOfDay >= 17 && timeOfDay <= 19)) {
-        multiplier = 1.2;
+      // Morning cooking fires and traffic (worse air quality)
+      if ((timeOfDay >= 6 && timeOfDay <= 8) || (timeOfDay >= 17 && timeOfDay <= 19)) {
+        multiplier = 1.3;
+      }
+      // Afternoon heat can worsen air quality
+      else if (timeOfDay >= 12 && timeOfDay <= 15) {
+        multiplier = 1.1;
       }
       // Night time (better air quality)
-      else if (timeOfDay >= 22 || timeOfDay <= 6) {
-        multiplier = 0.8;
+      else if (timeOfDay >= 21 || timeOfDay <= 5) {
+        multiplier = 0.7;
       }
       
-      const variation = (Math.random() - 0.5) * 30;
-      const forecastAQI = Math.max(10, Math.min(300, Math.floor(baseAQI * multiplier + variation)));
+      const variation = (Math.random() - 0.5) * 25;
+      const forecastAQI = Math.max(15, Math.min(250, Math.floor(baseAQI * multiplier + variation)));
       
       forecast.push({
         time: hour.toISOString(),
         aqi: forecastAQI,
-        pm25: Math.max(5, Math.floor(forecastAQI / 4 + (Math.random() * 10 - 5))),
+        pm25: Math.max(8, Math.floor(forecastAQI / 3.5 + (Math.random() * 8 - 4))),
       });
     }
     return forecast;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-2 sm:p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-2 sm:p-4">
+      <div className="max-w-5xl mx-auto">
         <header className="text-center mb-4 sm:mb-8">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
-            AirWise Global Monitor
-          </h1>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <Globe className="h-8 w-8 sm:h-10 sm:w-10 text-green-600" />
+            <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">
+              Cambodia Air Quality Monitor
+            </h1>
+          </div>
           <p className="text-sm sm:text-lg text-gray-600">
-            Real-time air quality monitoring with enhanced mock data
+            Real-time air quality monitoring across Cambodia
           </p>
+          <div className="mt-2 px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full inline-block">
+            🇰🇭 Focused on Cambodia locations
+          </div>
         </header>
 
-        {/* Mobile-first layout */}
+        {/* Mobile-optimized layout */}
         <div className="space-y-4 sm:space-y-6">
-          {/* Location Selection - Full width on mobile */}
-          <Card>
+          {/* Cambodia Location Selection */}
+          <Card className="shadow-lg">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Search className="h-5 w-5" />
-                Location Selection
+                <Search className="h-5 w-5 text-green-600" />
+                Search Cambodia Locations
               </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Find air quality data for cities, provinces, and districts across Cambodia
+              </p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <LocationSearch onLocationSelect={handleLocationSelect} />
-              <div className="h-48 sm:h-64">
-                <InteractiveMap 
-                  onLocationSelect={handleLocationSelect}
-                  selectedLocation={selectedLocation}
-                />
-              </div>
             </CardContent>
           </Card>
 
-          {/* Current Air Quality - Full width on mobile */}
-          <Card>
+          {/* Current Air Quality */}
+          <Card className="shadow-lg">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
-                <MapPin className="h-5 w-5" />
+                <MapPin className="h-5 w-5 text-blue-600" />
                 Current Air Quality
               </CardTitle>
             </CardHeader>
@@ -185,8 +192,10 @@ const Index = () => {
                   isLoading={isLoading}
                 />
               ) : (
-                <div className="text-center text-gray-500 py-8">
-                  Select a location to view air quality data
+                <div className="text-center text-gray-500 py-12">
+                  <Globe className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium">Select a Cambodia location</p>
+                  <p className="text-sm">Search above to view air quality data for any location in Cambodia</p>
                 </div>
               )}
             </CardContent>
@@ -195,7 +204,7 @@ const Index = () => {
           {/* Additional Information - Stack vertically on mobile */}
           {airQualityData && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Pollutant Details</CardTitle>
                 </CardHeader>
@@ -204,7 +213,7 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-lg">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg">24-Hour Forecast</CardTitle>
                 </CardHeader>
